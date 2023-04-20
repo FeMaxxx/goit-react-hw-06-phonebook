@@ -1,7 +1,10 @@
-import PropTypes from "prop-types";
+import { useDispatch, useSelector } from "react-redux";
 import { Formik, ErrorMessage } from "formik";
 import { FormBox, Title, Input, Label, Button, Eror } from "./PBForm.styled";
 import { object, string, number } from "yup";
+import { addContact } from "redux/contactsSlice";
+import shortid from "shortid";
+import { getContacts } from "redux/selectors";
 
 const schema = object({
   name: string().required(),
@@ -10,9 +13,30 @@ const schema = object({
 
 const initialValues = { name: "", number: "" };
 
-export const PBForm = ({ onSubmit }) => {
+export const PBForm = () => {
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
+
   const handleSubmit = (values, { resetForm }) => {
-    onSubmit(values);
+    const { name, number } = values;
+
+    const haveContact = contacts.some((contact) => {
+      return contact.name.toLowerCase() === name.toLowerCase();
+    });
+
+    if (haveContact) {
+      alert(`${name} is already in contacts`);
+      return;
+    }
+
+    const newContact = {
+      id: shortid.generate(),
+      name,
+      number,
+    };
+
+    dispatch(addContact(newContact));
+
     resetForm();
   };
 
@@ -41,8 +65,4 @@ export const PBForm = ({ onSubmit }) => {
       </FormBox>
     </Formik>
   );
-};
-
-PBForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
 };
